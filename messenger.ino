@@ -8,6 +8,7 @@
 
 // Button debouncing see: https://blog.adafruit.com/2009/10/20/example-code-for-multi-button-checker-with-debouncing/
 #define DEBOUNCE 10  // button debouncer, how many ms to debounce, 5+ ms is usually plenty
+#define MESSAGE_LENGTH 4
 
 // Digital IO pin connected to the button.  This will be
 // driven with a pull-up resistor so the switch should
@@ -34,8 +35,9 @@ Adafruit_NeoPixel strip = Adafruit_NeoPixel(1, PIXEL_PIN, NEO_GRB + NEO_KHZ800);
 // Arrays for the Morse word and the message
 int morse[6];
 int mi = 0;
-int message[256];
+String message = ""; //[MESSAGE_LENGTH];
 int msi = 0;
+int nBrk = 0;
 
 void setup() {
   pinMode(BUTTON_PIN_DIT, INPUT_PULLUP);
@@ -64,33 +66,71 @@ void loop() {
   bBRK.update();
   bSND.update();
 
-  mi = mi % 6;
   if (bDIT.fell()) {
-    morse[mi] = 1;
-    mi++;
     Serial.println("dit");
+    addMorse(1);
+    printMorse();
+    printMorseChar();
+    printMessage();
   } else if (bDAH.fell()) {
-    morse[mi] = 3;
-    mi++;
     Serial.println("dah");
+    addMorse(3);
+    printMorse();
+    printMorseChar();
+    printMessage();
   } else if (bBRK.fell()) {
     Serial.println("brk");
     printMorse();
-    char mc = morse2char();
-    Serial.println(mc);
+    printMorseChar();
+    printMessage();
+    addCharacter(readMorse());
+    printMessage();
     clearMorse();
-    //if (lastPIN == BUTTON_PIN_BRK) {
-      //addCharacter(' ');
-    //} else {
-      //addCharacter(getMorse());
-      //clearMorse();
-    //}
   } else if (bSND.fell()) {
     Serial.println("snd");
-      //printMessage();
-      //clearMessage();
+    printMessage();
+    clearMorse();
+    clearMessage();
   }
   
+}
+
+void addSeparators() {
+  if (nBrk == 1) {
+    addCharacter(readMorse());
+    clearMorse();
+  } else if (nBrk == 2) {
+    addCharacter(readMorse());
+    addCharacter(' ');
+    clearMorse();
+  } else if (nBrk == 3) {
+    addCharacter(readMorse());
+    addCharacter('.');
+    addCharacter(' ');
+    clearMorse();
+  }
+  printMessage();
+  nBrk = 0;
+}
+
+void addCharacter(char c) {
+  msi = msi % MESSAGE_LENGTH;
+  message += c;
+  Serial.println(message);
+}
+
+void printMessage() {
+  Serial.println(message);
+}
+
+void clearMessage() {
+  message.remove(0);
+}
+
+void addMorse(int i) {
+  mi = mi % 6;
+  morse[mi] = i;
+  mi++;
 }
 
 void clearMorse() {
@@ -100,62 +140,64 @@ void clearMorse() {
   mi = 0;
 }
 
-char morse2char() {
+void printMorseChar() {
+  char mc = readMorse();
+  Serial.print(" > ");
+  Serial.println(mc);
+}
+
+char readMorse() {
   int total = 0;
-  int temp = 0;
-  int base = 0.0;
-  int e = 0.0;
   char mc;
   for (int ii=0; ii<6; ii++) {
-    base = (morse[ii]+1);
-    e = (ii+1);
-    temp = ipow(base, e);
-    Serial.print(base);
-    Serial.print('^');
-    Serial.print(e);
-    Serial.print('=');
-    Serial.print(temp);
-    Serial.print("+ ");
-    total += temp;
+    total += ipow(morse[ii]+1, ii+1);
   }
-  Serial.println(total);
   switch (total) {
+    case 22: mc = 'A'; break;
+    case 34: mc = 'B'; break;
+    case 90: mc = 'C'; break;
+    case 19: mc = 'D'; break;
+    case 7: mc = 'E'; break;
+    case 88: mc = 'F'; break;
+    case 31: mc = 'G'; break;
+    case 32: mc = 'H'; break;
+    case 10: mc = 'I'; break;
+    case 340: mc = 'J'; break;
+    case 75: mc = 'K'; break;
+    case 44: mc = 'L'; break;
+    case 24: mc = 'M'; break;
     case 12: mc = 'N'; break;
     case 87: mc = 'O'; break;
-    case 46: mc = 'Z'; break;
     case 100: mc = 'P'; break;
-    case 77: mc = '7'; break;
-    case 7: mc = 'E'; break;
-    case 85: mc = 'W'; break;
-    case 1365: mc = '0'; break;
-    case 373: mc = '9'; break;
-    case 31: mc = 'G'; break;
-    case 44: mc = 'L'; break;
+    case 286: mc = 'Q'; break;
+    case 29: mc = 'R'; break;
+    case 17: mc = 'S'; break;
+    case 9: mc = 'T'; break;
     case 73: mc = 'U'; break;
-    case 22: mc = 'A'; break;
-    case 1351: mc = '2'; break;
+    case 272: mc = 'V'; break;
+    case 85: mc = 'W'; break;
+    case 274: mc = 'X'; break;
     case 330: mc = 'Y'; break;
-    case 90: mc = 'C'; break;
+    case 46: mc = 'Z'; break;
+    case 1363: mc = '1'; break;
+    case 1351: mc = '2'; break;
     case 1295: mc = '3'; break;
     case 1055: mc = '4'; break;
-    case 274: mc = 'X'; break;
-    case 286: mc = 'Q'; break;
-    case 9: mc = 'T'; break;
-    case 32: mc = 'H'; break;
-    case 1363: mc = '1'; break;
-    case 34: mc = 'B'; break;
-    case 29: mc = 'R'; break;
-    case 10: mc = 'I'; break;
-    case 75: mc = 'K'; break;
-    case 65: mc = '6'; break;
-    case 17: mc = 'S'; break;
-    case 24: mc = 'M'; break;
-    case 19: mc = 'D'; break;
-    case 133: mc = '8'; break;
-    case 340: mc = 'J'; break;
     case 63: mc = '5'; break;
-    case 272: mc = 'V'; break;
-    case 88: mc = 'F'; break;
+    case 65: mc = '6'; break;
+    case 77: mc = '7'; break;
+    case 133: mc = '8'; break;
+    case 373: mc = '9'; break;
+    case 1365: mc = '0'; break;
+    case 4410: mc = '.'; break;
+    case 5164: mc = ','; break;
+    case 1426: mc = '''; break;
+    case 4160: mc = '-'; break;
+    case 305: mc = '/'; break;
+    case 1186: mc = '@'; break;
+    case 1057: mc = '='; break;
+    case 4456: mc = '('; break;
+    case 1130: mc = ')'; break;
     default:
       mc = '*';
       break;
@@ -177,7 +219,7 @@ int ipow(int base, int expn)
     return result;
 }
 
-// Convert the morse code to a character
+// Print the raw morse string we saved
 void printMorse() {
   char mm[6];
   int total = 0;
@@ -190,8 +232,6 @@ void printMorse() {
       Serial.print("x");
     }
   }
-  Serial.println("/");
-  return mm;
 }
 
 
