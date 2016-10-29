@@ -40,16 +40,28 @@ chars = {
         '8': [3, 3, 3, 1, 1, 0],
         '9': [3, 3, 3, 3, 1, 0],
         '0': [3, 3, 3, 3, 3, 0],
+        '.': [1, 3, 1, 3, 1, 3],
+        ',': [3, 3, 1, 1, 3, 3],
+        ':': [3, 3, 3, 1, 1, 1],
+        '?': [1, 1, 3, 3, 1, 1],
+        "'": [1, 3, 3, 3, 3, 1],
+        '-': [3, 1, 1, 1, 1, 3],
+        '/': [3, 1, 1, 3, 1, 0],
+        '@': [1, 3, 3, 1, 3, 1],
+        '=': [3, 1, 1, 1, 3, 0],
+        '(': [3, 1, 3, 3, 1, 3],
+        ')': [1, 3, 1, 1, 3, 1],
         }
 
 lens = []
 totals = []
-for key in chars:
+order = "ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890.,'-/@=()"
+for key in order:
     total = 0
     clen = 0
     for i in range(6):
-        print("I: {0}, E: {1} :: {2}^{3}= {4}".format(
-            i, chars[key][i], chars[key][i]+1, i+1, (chars[key][i]+1)**(i+1) ))
+        #print("I: {0}, E: {1} :: {2}^{3}= {4}".format(
+        #    i, chars[key][i], chars[key][i]+1, i+1, (chars[key][i]+1)**(i+1) ))
         total += (chars[key][i]+1)**(i+1)
         if chars[key][i]:
             clen += 1

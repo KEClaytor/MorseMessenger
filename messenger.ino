@@ -8,7 +8,6 @@
 
 // Button debouncing see: https://blog.adafruit.com/2009/10/20/example-code-for-multi-button-checker-with-debouncing/
 #define DEBOUNCE 10  // button debouncer, how many ms to debounce, 5+ ms is usually plenty
-#define MESSAGE_LENGTH 4
 
 // Digital IO pin connected to the button.  This will be
 // driven with a pull-up resistor so the switch should
@@ -35,8 +34,7 @@ Adafruit_NeoPixel strip = Adafruit_NeoPixel(1, PIXEL_PIN, NEO_GRB + NEO_KHZ800);
 // Arrays for the Morse word and the message
 int morse[6];
 int mi = 0;
-String message = ""; //[MESSAGE_LENGTH];
-int msi = 0;
+String message = "";
 int nBrk = 0;
 
 void setup() {
@@ -69,28 +67,32 @@ void loop() {
   if (bDIT.fell()) {
     Serial.println("dit");
     addMorse(1);
-    printMorse();
-    printMorseChar();
-    printMessage();
+    //printMorse();
+    //printMorseChar();
+    //printMessage();
+    nBrk = 0;
   } else if (bDAH.fell()) {
     Serial.println("dah");
     addMorse(3);
-    printMorse();
-    printMorseChar();
-    printMessage();
+    //printMorse();
+    //printMorseChar();
+    //printMessage();
+    nBrk = 0;
   } else if (bBRK.fell()) {
     Serial.println("brk");
-    printMorse();
-    printMorseChar();
-    printMessage();
-    addCharacter(readMorse());
-    printMessage();
+    if (nBrk == 0) {
+      addCharacter(readMorse());  
+    } else if (nBrk == 1) {
+      addCharacter(' ');
+    }
     clearMorse();
+    nBrk++;
   } else if (bSND.fell()) {
     Serial.println("snd");
     printMessage();
     clearMorse();
     clearMessage();
+    nBrk = 0;
   }
   
 }
@@ -114,9 +116,7 @@ void addSeparators() {
 }
 
 void addCharacter(char c) {
-  msi = msi % MESSAGE_LENGTH;
   message += c;
-  Serial.println(message);
 }
 
 void printMessage() {
@@ -191,7 +191,7 @@ char readMorse() {
     case 1365: mc = '0'; break;
     case 4410: mc = '.'; break;
     case 5164: mc = ','; break;
-    case 1426: mc = '''; break;
+    case 1426: mc = '"'; break;
     case 4160: mc = '-'; break;
     case 305: mc = '/'; break;
     case 1186: mc = '@'; break;
