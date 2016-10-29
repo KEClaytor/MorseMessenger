@@ -58,7 +58,7 @@ void setup() {
 }
 
 void loop() {
-  // Update teh bouncer states
+  // Update the bouncer states
   bDIT.update();
   bDAH.update();
   bBRK.update();
@@ -94,25 +94,6 @@ void loop() {
     clearMessage();
     nBrk = 0;
   }
-  
-}
-
-void addSeparators() {
-  if (nBrk == 1) {
-    addCharacter(readMorse());
-    clearMorse();
-  } else if (nBrk == 2) {
-    addCharacter(readMorse());
-    addCharacter(' ');
-    clearMorse();
-  } else if (nBrk == 3) {
-    addCharacter(readMorse());
-    addCharacter('.');
-    addCharacter(' ');
-    clearMorse();
-  }
-  printMessage();
-  nBrk = 0;
 }
 
 void addCharacter(char c) {
