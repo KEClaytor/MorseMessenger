@@ -6,6 +6,18 @@
 #include <Adafruit_NeoPixel.h>
 #include <Bounce2.h>
 
+#include <Arduino.h>
+#include <SPI.h>
+#if not defined (_VARIANT_ARDUINO_DUE_X_) && not defined(ARDUINO_ARCH_SAMD)
+  #include <SoftwareSerial.h>
+#endif
+
+#include "Adafruit_BLE.h"
+#include "Adafruit_BluefruitLE_SPI.h"
+#include "Adafruit_BluefruitLE_UART.h"
+
+#include "BluefruitConfig.h"
+
 // Button debouncing see: https://blog.adafruit.com/2009/10/20/example-code-for-multi-button-checker-with-debouncing/
 #define DEBOUNCE 10  // button debouncer, how many ms to debounce, 5+ ms is usually plenty
 
@@ -31,6 +43,20 @@ Bounce bSND = Bounce();
 
 Adafruit_NeoPixel strip = Adafruit_NeoPixel(1, PIXEL_PIN, NEO_GRB + NEO_KHZ800);
 
+// BLE HID Setup
+#define FACTORYRESET_ENABLE         0
+#define MINIMUM_FIRMWARE_VERSION    "0.6.6"
+
+// Create the bluefruit object, either software serial...uncomment these lines
+/* ...or hardware serial, which does not need the RTS/CTS pins. Uncomment this line */
+Adafruit_BluefruitLE_UART ble(BLUEFRUIT_HWSERIAL_NAME, BLUEFRUIT_UART_MODE_PIN);
+
+// A small helper
+void error(const __FlashStringHelper*err) {
+  Serial.println(err);
+  while (1);
+}
+
 // Arrays for the Morse word and the message
 int morse[6];
 int mi = 0;
@@ -38,6 +64,13 @@ String message = "";
 int nBrk = 0;
 
 void setup() {
+  while (!Serial);  // required for Flora & Micro
+  delay(500);
+
+  Serial.begin(115200);
+  Serial.println(F("Messenger begins..."));
+  Serial.println(F("---------------------------------------"));
+  
   pinMode(BUTTON_PIN_DIT, INPUT_PULLUP);
   pinMode(BUTTON_PIN_DAH, INPUT_PULLUP);
   pinMode(BUTTON_PIN_BRK, INPUT_PULLUP);
@@ -55,6 +88,59 @@ void setup() {
   
   strip.begin();
   strip.show(); // Initialize all pixels to 'off'
+
+  // BLE HID Keyboard setup
+  
+  /* Initialise the module */
+  Serial.print(F("Initialising the Bluefruit LE module: "));
+
+  if ( !ble.begin(VERBOSE_MODE) )
+  {
+    error(F("Couldn't find Bluefruit, make sure it's in CoMmanD mode & check wiring?"));
+  }
+  Serial.println( F("OK!") );
+
+  if ( FACTORYRESET_ENABLE )
+  {
+    /* Perform a factory reset to make sure everything is in a known state */
+    Serial.println(F("Performing a factory reset: "));
+    if ( ! ble.factoryReset() ){
+      error(F("Couldn't factory reset"));
+    }
+  }
+
+  /* Disable command echo from Bluefruit */
+  ble.echo(false);
+
+  Serial.println("Requesting Bluefruit info:");
+  /* Print Bluefruit information */
+  ble.info();
+
+  /* Change the device name to make it easier to find */
+  Serial.println(F("Setting device name to 'Bluefruit Keyboard': "));
+  if (! ble.sendCommandCheckOK(F( "AT+GAPDEVNAME=Bluefruit Keyboard" )) ) {
+    error(F("Could not set device name?"));
+  }
+
+  /* Enable HID Service */
+  Serial.println(F("Enable HID Service (including Keyboard): "));
+  if ( ble.isVersionAtLeast(MINIMUM_FIRMWARE_VERSION) )
+  {
+    if ( !ble.sendCommandCheckOK(F( "AT+BleHIDEn=On" ))) {
+      error(F("Could not enable Keyboard"));
+    }
+  }else
+  {
+    if (! ble.sendCommandCheckOK(F( "AT+BleKeyboardEn=On"  ))) {
+      error(F("Could not enable Keyboard"));
+    }
+  }
+
+  /* Add or remove service requires a reset */
+  Serial.println(F("Performing a SW reset (service changes require a reset): "));
+  if (! ble.reset() ) {
+    error(F("Couldn't reset??"));
+  }
 }
 
 void loop() {
@@ -102,6 +188,20 @@ void addCharacter(char c) {
 
 void printMessage() {
   Serial.println(message);
+
+  char messBuff[50];
+  message.toCharArray(messBuff, 50);
+
+  ble.print("AT+BleKeyboard=");
+  ble.println(messBuff);
+
+  if( ble.waitForOK() )
+  {
+    Serial.println( F("OK!") );
+  }else
+  {
+    Serial.println( F("FAILED!") );
+  }
 }
 
 void clearMessage() {
