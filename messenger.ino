@@ -35,13 +35,14 @@ Bounce bSND = Bounce();
 //  brk is used for character break (one tap) word break (two taps)
 //  or sentence break (three taps).
 #define BUTTON_PIN_DIT   12
-#define BUTTON_PIN_DAH   6
-#define BUTTON_PIN_BRK   9
+#define BUTTON_PIN_DAH   9
+#define BUTTON_PIN_BRK   6
 #define BUTTON_PIN_SND   10
 
+#define NUMPIXELS    1
 #define PIXEL_PIN    8    // Digital IO pin connected to the NeoPixels.
 
-Adafruit_NeoPixel strip = Adafruit_NeoPixel(1, PIXEL_PIN, NEO_GRB + NEO_KHZ800);
+Adafruit_NeoPixel pixels = Adafruit_NeoPixel(1, PIXEL_PIN, NEO_GRB + NEO_KHZ800);
 
 // BLE HID Setup
 #define FACTORYRESET_ENABLE         0
@@ -64,7 +65,7 @@ String message = "";
 int nBrk = 0;
 
 void setup() {
-  while (!Serial);  // required for Flora & Micro
+  //while (!Serial);  // required for Flora & Micro
   delay(500);
 
   Serial.begin(115200);
@@ -86,8 +87,8 @@ void setup() {
   bSND.attach(BUTTON_PIN_SND);
   bSND.interval(DEBOUNCE);
   
-  strip.begin();
-  strip.show(); // Initialize all pixels to 'off'
+  pixels.begin();
+  pixels.show(); // Initialize all pixels to 'off'
 
   // BLE HID Keyboard setup
   
@@ -157,6 +158,7 @@ void loop() {
     //printMorseChar();
     //printMessage();
     nBrk = 0;
+    blink(0, 255, 255);
   } else if (bDAH.fell()) {
     Serial.println("dah");
     addMorse(3);
@@ -164,6 +166,7 @@ void loop() {
     //printMorseChar();
     //printMessage();
     nBrk = 0;
+    blink(255, 0, 255);
   } else if (bBRK.fell()) {
     Serial.println("brk");
     if (nBrk == 0) {
@@ -173,6 +176,7 @@ void loop() {
     }
     clearMorse();
     nBrk++;
+    blink(255, 150, 0);
   } else if (bSND.fell()) {
     Serial.println("snd");
     printMessage();
@@ -198,9 +202,11 @@ void printMessage() {
   if( ble.waitForOK() )
   {
     Serial.println( F("OK!") );
+    blink(0, 255, 0);
   }else
   {
     Serial.println( F("FAILED!") );
+    blink(255, 0, 0);
   }
 }
 
@@ -315,27 +321,43 @@ void printMorse() {
   }
 }
 
+void blink(int red, int green, int blue) {
+  // Turn on
+  for(uint8_t i=0; i<NUMPIXELS; i++) {
+    pixels.setPixelColor(i, pixels.Color(red,green,blue));
+    }
+  pixels.show();
+
+  // Wait
+  delay(100);
+
+  // Turn off
+  for(uint8_t i=0; i<NUMPIXELS; i++) {
+    pixels.setPixelColor(i, pixels.Color(0, 0, 0));
+  }
+  pixels.show();
+}
 
 void setColor(int i) {
   switch(i){
-    case 0: colorWipe(strip.Color(0, 0, 0), 50);  // Black/off
+    case 0: colorWipe(pixels.Color(0, 0, 0), 50);  // Black/off
             break;
-    case 1: colorWipe(strip.Color(255, 0, 0), 50);      // Red
+    case 1: colorWipe(pixels.Color(255, 0, 0), 50);      // Red
             break;
-    case 2: colorWipe(strip.Color(0, 255, 0), 50);  // Green
+    case 2: colorWipe(pixels.Color(0, 255, 0), 50);  // Green
             break;
-    case 3: colorWipe(strip.Color(0, 0, 255), 50);  // Blue
+    case 3: colorWipe(pixels.Color(0, 0, 255), 50);  // Blue
             break;
-    case 4: colorWipe(strip.Color(127, 127, 127), 50);  // White
+    case 4: colorWipe(pixels.Color(127, 127, 127), 50);  // White
             break;
   }
 }
 
 // Fill the dots one after the other with a color
 void colorWipe(uint32_t c, uint8_t wait) {
-  for(uint16_t i=0; i<strip.numPixels(); i++) {
-    strip.setPixelColor(i, c);
-    strip.show();
+  for(uint16_t i=0; i<pixels.numPixels(); i++) {
+    pixels.setPixelColor(i, c);
+    pixels.show();
     delay(wait);
   }
 }
