@@ -7,10 +7,10 @@ You'll need the Adafruit Neopixel and Bluefruit libraries and the bounce2 librar
 
 ## Hardware
 Hardware pins are set with;
-#define BUTTON_PIN_DIT   12
+`#define BUTTON_PIN_DIT   12
 #define BUTTON_PIN_DAH   9
 #define BUTTON_PIN_BRK   6
-#define BUTTON_PIN_SND   10
+#define BUTTON_PIN_SND   10`
 
 These are pulled up with the internal resistor and a connection to ground (gnd) will pull them down and trigger the button press.
 
