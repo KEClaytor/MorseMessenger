@@ -1,16 +1,20 @@
 # MorseMessenger
 Send "morse" code via bluetooth and a wearable glove.
-See video at: https://youtu.be/ZiRGSabL8Xk
+See video at: https://youtu.be/
+
+<a href="http://www.youtube.com/watch?feature=player_embedded&v=ZiRGSabL8Xk" target="_blank"><img src="http://img.youtube.com/vi/ZiRGSabL8Xk/0.jpg" alt="MorseMessenger Video" width="240" height="180" border="10" /></a>
 
 ## Configuration
 You'll need the Adafruit Neopixel and Bluefruit libraries and the bounce2 library. These can be downloaded from within the arduino IDE.
 
 ## Hardware
 Hardware pins are set with;
-`#define BUTTON_PIN_DIT   12
+```
+#define BUTTON_PIN_DIT   12
 #define BUTTON_PIN_DAH   9
 #define BUTTON_PIN_BRK   6
-#define BUTTON_PIN_SND   10`
+#define BUTTON_PIN_SND   10
+```
 
 These are pulled up with the internal resistor and a connection to ground (gnd) will pull them down and trigger the button press.
 
