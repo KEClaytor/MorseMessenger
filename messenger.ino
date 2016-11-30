@@ -121,6 +121,9 @@ void setup() {
   Serial.println(F("Setting device name to 'Bluefruit Keyboard': "));
   if (! ble.sendCommandCheckOK(F( "AT+GAPDEVNAME=Bluefruit Keyboard" )) ) {
     error(F("Could not set device name?"));
+      blink(150, 0, 0);
+    } else {
+      blink(0, 150, 0);
   }
 
   /* Enable HID Service */
@@ -129,11 +132,17 @@ void setup() {
   {
     if ( !ble.sendCommandCheckOK(F( "AT+BleHIDEn=On" ))) {
       error(F("Could not enable Keyboard"));
+      blink(150, 0, 0);
+    } else {
+      blink(0, 150, 0);
     }
   }else
   {
     if (! ble.sendCommandCheckOK(F( "AT+BleKeyboardEn=On"  ))) {
       error(F("Could not enable Keyboard"));
+      blink(150, 0, 0);
+    } else {
+      blink(0, 150, 0);
     }
   }
 
@@ -141,6 +150,9 @@ void setup() {
   Serial.println(F("Performing a SW reset (service changes require a reset): "));
   if (! ble.reset() ) {
     error(F("Couldn't reset??"));
+    blink(150, 0, 0);
+  } else {
+    blink(0, 150, 0);
   }
 }
 
@@ -158,7 +170,7 @@ void loop() {
     //printMorseChar();
     //printMessage();
     nBrk = 0;
-    blink(0, 255, 255);
+    blink(0, 150, 150);
   } else if (bDAH.fell()) {
     Serial.println("dah");
     addMorse(3);
@@ -166,7 +178,7 @@ void loop() {
     //printMorseChar();
     //printMessage();
     nBrk = 0;
-    blink(255, 0, 255);
+    blink(150, 0, 150);
   } else if (bBRK.fell()) {
     Serial.println("brk");
     if (nBrk == 0) {
@@ -176,7 +188,7 @@ void loop() {
     }
     clearMorse();
     nBrk++;
-    blink(255, 150, 0);
+    blink(150, 75, 0);
   } else if (bSND.fell()) {
     Serial.println("snd");
     printMessage();
@@ -336,29 +348,5 @@ void blink(int red, int green, int blue) {
     pixels.setPixelColor(i, pixels.Color(0, 0, 0));
   }
   pixels.show();
-}
-
-void setColor(int i) {
-  switch(i){
-    case 0: colorWipe(pixels.Color(0, 0, 0), 50);  // Black/off
-            break;
-    case 1: colorWipe(pixels.Color(255, 0, 0), 50);      // Red
-            break;
-    case 2: colorWipe(pixels.Color(0, 255, 0), 50);  // Green
-            break;
-    case 3: colorWipe(pixels.Color(0, 0, 255), 50);  // Blue
-            break;
-    case 4: colorWipe(pixels.Color(127, 127, 127), 50);  // White
-            break;
-  }
-}
-
-// Fill the dots one after the other with a color
-void colorWipe(uint32_t c, uint8_t wait) {
-  for(uint16_t i=0; i<pixels.numPixels(); i++) {
-    pixels.setPixelColor(i, c);
-    pixels.show();
-    delay(wait);
-  }
 }
 
